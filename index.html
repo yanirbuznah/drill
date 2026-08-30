@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#F5F6F8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0D1017" media="(prefers-color-scheme: dark)">
+<meta name="description" content="Bilingual exam-practice drills. Pick a subject.">
+<link rel="icon" href="./ml/favicon-32.png" sizes="32x32" type="image/png">
+<title>Drill</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Hebrew:wght@400;500;600;700&display=swap">
+<style>
+:root{--bg:#F5F6F8;--surface:#FFF;--line:#D8DEE7;--line-strong:#BCC5D2;--ink:#131820;--muted:#5A6472;--faint:#8B94A3;
+ --shadow:0 1px 2px rgba(19,24,32,.05),0 8px 24px -12px rgba(19,24,32,.18);
+ --sans:"IBM Plex Sans","IBM Plex Sans Hebrew",system-ui,-apple-system,"Segoe UI",sans-serif;
+ --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0D1017;--surface:#151A23;--line:#293040;--line-strong:#3A4353;--ink:#E8ECF3;--muted:#9AA5B5;--faint:#77808F;--shadow:0 1px 2px rgba(0,0,0,.4),0 10px 28px -14px rgba(0,0,0,.7)}}
+:root[data-theme="dark"]{--bg:#0D1017;--surface:#151A23;--line:#293040;--line-strong:#3A4353;--ink:#E8ECF3;--muted:#9AA5B5;--faint:#77808F;--shadow:0 1px 2px rgba(0,0,0,.4),0 10px 28px -14px rgba(0,0,0,.7)}
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.55;-webkit-text-size-adjust:100%}
+.wrap{max-width:640px;margin:0 auto;padding:0 16px 48px;min-height:100dvh;display:flex;flex-direction:column}
+header{display:flex;align-items:center;gap:10px;padding:calc(16px + env(safe-area-inset-top)) 0 8px}
+.brand{margin-inline-end:auto;font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint)}
+button.tg{height:32px;padding:0 10px;border:1px solid var(--line);border-radius:5px;background:var(--surface);
+ font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--muted);cursor:pointer}
+button.tg:hover{border-color:var(--line-strong);color:var(--ink)}
+h1{font-size:28px;line-height:1.15;letter-spacing:-.02em;margin:18px 0 6px;text-wrap:balance}
+.lede{color:var(--muted);font-size:15px;margin:0 0 26px;max-width:52ch}
+.list{display:flex;flex-direction:column;gap:10px}
+.pk{display:flex;gap:14px;align-items:flex-start;padding:15px;background:var(--surface);border:1px solid var(--line);
+ border-radius:9px;box-shadow:var(--shadow);text-decoration:none;color:inherit;transition:border-color .12s,transform .12s}
+.pk:hover{border-color:var(--pa);transform:translateY(-1px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .pk:hover{border-color:var(--pad)}}
+:root[data-theme="dark"] .pk:hover{border-color:var(--pad)}
+.ico{flex:0 0 auto;width:46px;height:46px;border-radius:11px;overflow:hidden;display:block}
+.ico img{width:100%;height:100%;display:block}
+.body{display:flex;flex-direction:column;gap:3px;min-width:0}
+.pk b{font-size:17px;letter-spacing:-.01em}
+.bl{font-size:13.5px;color:var(--muted);line-height:1.45}
+.meta{font-family:var(--mono);font-size:11px;color:var(--faint);letter-spacing:.04em;margin-top:3px;display:flex;align-items:center;gap:6px}
+.meta i{width:3px;height:3px;border-radius:50%;background:var(--line-strong);display:block}
+.tnum{font-variant-numeric:tabular-nums;color:var(--muted)}
+footer{margin-top:auto;padding-top:36px;font-size:12.5px;color:var(--faint);line-height:1.6}
+[dir="rtl"] .brand,[dir="rtl"] .meta{letter-spacing:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="brand">Drill</span>
+    <button class="tg" id="lang">עב</button>
+    <button class="tg" id="theme">AUTO</button>
+  </header>
+  <h1 data-en="Pick a subject." data-he="בחרו נושא.">Pick a subject.</h1>
+  <p class="lede" data-en="Bilingual exam practice. The question comes first — answer it in your head, then reveal the options."
+     data-he="תרגול דו-לשוני למבחנים. השאלה מופיעה ראשונה — ענו בראש, ורק אז חשפו את התשובות.">Bilingual exam practice. The question comes first — answer it in your head, then reveal the options.</p>
+  <div class="list">
+      <a class="pk" href="./ml/" style="--pa:#4338A8;--pad:#9A8CFF">
+        <span class="ico" aria-hidden="true"><img src="./ml/icon-192.png" alt=""></span>
+        <span class="body">
+          <b data-en="ML Drill" data-he="תרגול ML">ML Drill</b>
+          <span class="bl" data-en="Machine learning and deep learning, from classical models to LLMs and production." data-he="למידת מכונה ולמידה עמוקה — ממודלים קלאסיים ועד מודלי שפה ופרודקשן.">Machine learning and deep learning, from classical models to LLMs and production.</span>
+          <span class="meta"><span class="tnum">218</span> <span data-en="questions" data-he="שאלות">questions</span>
+            <i></i> <span class="tnum">14</span> <span data-en="areas" data-he="תחומים">areas</span></span>
+        </span>
+      </a>
+      <a class="pk" href="./random-signals/" style="--pa:#0F6E7A;--pad:#4FC6D6">
+        <span class="ico" aria-hidden="true"><img src="./random-signals/icon-192.png" alt=""></span>
+        <span class="body">
+          <b data-en="Random Signals" data-he="אותות אקראיים">Random Signals</b>
+          <span class="bl" data-en="Stochastic processes, PSD, LTI filtering, estimation, detection, Markov chains and queues." data-he="תהליכים אקראיים, PSD, סינון LTI, אמידה, גילוי, שרשראות מרקוב ותורים.">Stochastic processes, PSD, LTI filtering, estimation, detection, Markov chains and queues.</span>
+          <span class="meta"><span class="tnum">210</span> <span data-en="questions" data-he="שאלות">questions</span>
+            <i></i> <span class="tnum">14</span> <span data-en="areas" data-he="תחומים">areas</span></span>
+        </span>
+      </a>
+  </div>
+  <footer data-en="Each subject installs as its own app: open it, then Add to Home Screen. Everything works offline."
+          data-he="כל נושא מותקן כאפליקציה נפרדת: פותחים אותו ואז מוסיפים למסך הבית. הכול עובד גם ללא רשת.">Each subject installs as its own app: open it, then Add to Home Screen. Everything works offline.</footer>
+</div>
+<script>
+var lang = (localStorage.getItem("drill.lang") || (navigator.language||"en").toLowerCase().slice(0,2));
+if(lang !== "he") lang = "en";
+var theme = localStorage.getItem("drill.theme") || "auto";
+function apply(){
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang === "he" ? "rtl" : "ltr";
+  document.querySelectorAll("[data-en]").forEach(function(el){
+    el.textContent = el.getAttribute("data-" + lang) || el.getAttribute("data-en");
+  });
+  document.getElementById("lang").textContent = lang === "en" ? "עב" : "EN";
+  if(theme === "auto") document.documentElement.removeAttribute("data-theme");
+  else document.documentElement.setAttribute("data-theme", theme);
+  document.getElementById("theme").textContent = theme === "auto" ? "AUTO" : theme.toUpperCase();
+}
+document.getElementById("lang").onclick = function(){
+  lang = lang === "en" ? "he" : "en";
+  try{ localStorage.setItem("drill.lang", lang); }catch(e){}
+  apply();
+};
+document.getElementById("theme").onclick = function(){
+  theme = theme === "auto" ? "light" : theme === "light" ? "dark" : "auto";
+  try{ localStorage.setItem("drill.theme", theme); }catch(e){}
+  apply();
+};
+apply();
+</script>
+</body>
+</html>
