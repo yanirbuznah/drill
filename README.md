@@ -3,20 +3,29 @@
 Bilingual (Hebrew / English) exam-practice apps. One static folder per subject — no server,
 no build step at runtime, no dependencies.
 
-| subject | questions | URL |
-|---|---|---|
-| ML Drill | 218 | `/ml/` |
-| Random Signals | 210 | `/random-signals/` |
+| subject | questions | formats | URL |
+|---|---|---|---|
+| English Grammar | 220 | multiple choice + fill-in-the-blank | `/english/` |
+| ML Drill | 218 | multiple choice + written | `/ml/` |
+| Random Signals | 210 | multiple choice + written | `/random-signals/` |
 
 The launcher at `/` lists them. Each subject installs as its own home-screen app with its own
 icon, its own offline cache and its own progress.
+
+## Question formats
+
+- **Multiple choice** — the question appears first; the options stay hidden until you ask for them.
+- **Fill in the blank (cloze)** — you type the missing word or phrase. Matching ignores case,
+  surrounding spaces, curly apostrophes and a trailing full stop, and each blank carries a list
+  of every acceptable form. Auto-graded, so these count in quizzes too.
+- **Written answer** — a model answer and a rubric you score yourself; optional AI grading.
 
 ## Adding a subject
 
 The engine is shared; a subject is three files:
 
-- `pack.json` — id, name and blurb (EN/HE), accent colour, icon motif, and the list of areas
-  with their bilingual labels
+- `pack.json` — id, name and blurb (EN/HE), accent colour, icon motif, the list of areas with
+  their bilingual labels, and optionally `hardnessLabels` to rename the "why it's hard" axis
 - `questions.json` — the question bank
 - `glossary.json` — the hover/tap definitions
 
