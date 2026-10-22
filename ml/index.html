@@ -290,6 +290,34 @@ textarea.answer:focus{border-color:var(--accent);outline:none}
 [dir="rtl"] .brand span,[dir="rtl"] .eyebrow,[dir="rtl"] .qmeta{letter-spacing:0}
 
 
+
+/* ---------- cloze: the sentence under test ---------- */
+.sent{
+  font-size:19px;line-height:1.75;letter-spacing:-.01em;margin:0;
+  direction:ltr;unicode-bidi:isolate;text-align:start;
+}
+[dir="rtl"] .sent{text-align:left}
+@media(min-width:700px){ .sent{font-size:21px} }
+.blank{
+  display:inline-block;width:auto;min-width:5.5em;max-width:min(100%,15em);
+  padding:2px 8px;margin:0 2px;
+  border:0;border-bottom:2px solid var(--accent);border-radius:3px 3px 0 0;
+  background:var(--surface-2);color:var(--ink);
+  font:inherit;font-size:.95em;text-align:center;direction:ltr;
+}
+.blank:focus{outline:none;background:var(--accent-soft);border-bottom-width:3px}
+.blank::placeholder{color:var(--faint);font-size:.85em;letter-spacing:.08em}
+.blank:disabled{opacity:1;background:transparent;border-bottom-style:dotted}
+.blank.good{background:var(--ok-soft);border-bottom-color:var(--ok);color:var(--ok);font-weight:600}
+.blank.bad{background:var(--bad-soft);border-bottom-color:var(--bad);color:var(--bad);text-decoration:line-through}
+.fix{display:block;margin-top:14px;padding:11px 13px;border-radius:var(--r-sm);
+  background:var(--ok-soft);border:1px solid var(--ok-line);font-size:14.5px;color:var(--ink)}
+.fix b{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ok);margin-bottom:4px}
+.fix .full{direction:ltr;unicode-bidi:isolate;display:block;line-height:1.6}
+.fix .full u{text-decoration:none;color:var(--ok);font-weight:600;border-bottom:2px solid var(--ok-line)}
+.alt{margin-top:7px;font-size:12.5px;color:var(--muted)}
+.alt code{font-family:var(--mono);font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:3px;direction:ltr;unicode-bidi:isolate;display:inline-block}
 /* ---------- inline math ---------- */
 .mth{
   font-family:var(--mono);font-size:.93em;
@@ -333,7 +361,6 @@ textarea.answer:focus{border-color:var(--accent);outline:none}
 </style>
 </head>
 <body>
-
 
 <div class="app">
   <header class="topbar">
@@ -492,7 +519,9 @@ const T = {
     modelAnswer:"Model answer", rubric:"Did you cover these?", selfScore:"Self-score",
     gotIt:"Got it", partly:"Partly", missed:"Missed", covered:"covered",
     gradeAI:"Grade with AI", grading:"Grading…", aiScore:"AI score", aiFeedback:"Feedback",
-    mcq:"Multiple choice", open:"Written answer",
+    mcq:"Multiple choice", open:"Written answer", cloze:"Fill in the blank",
+    check:"Check", typeHere:"type here", modelForm:"Correct",
+    alsoAccepted:"Also accepted", blankEmpty:"Fill the blank first",
     d1:"Easy", d2:"Medium", d3:"Hard", d4:"Expert",
     h_concept:"Concept", h_distractors:"Distractors", h_computation:"Computation", h_recall:"Recall", h_trap:"Trap",
     score:"Score", time:"Time", review:"Review", again:"Again", retryWrong:"Retry the misses",
@@ -532,7 +561,9 @@ const T = {
     modelAnswer:"תשובת מודל", rubric:"האם כיסיתם את אלה?", selfScore:"ניקוד עצמי",
     gotIt:"קלעתי", partly:"חלקית", missed:"פיספתי", covered:"כוסו",
     gradeAI:"בדיקה עם AI", grading:"בודק…", aiScore:"ציון AI", aiFeedback:"משוב",
-    mcq:"אמריקאית", open:"תשובה פתוחה",
+    mcq:"אמריקאית", open:"תשובה פתוחה", cloze:"השלמת מילה",
+    check:"בדיקה", typeHere:"הקלידו כאן", modelForm:"התשובה הנכונה",
+    alsoAccepted:"מתקבל גם", blankEmpty:"השלימו קודם את החסר",
     d1:"קל", d2:"בינוני", d3:"קשה", d4:"מומחה",
     h_concept:"קונספט", h_distractors:"מסיחים", h_computation:"חישוב", h_recall:"זכירה", h_trap:"מלכודת",
     score:"ציון", time:"זמן", review:"סקירה", again:"שוב", retryWrong:"תרגל את הטעויות",
@@ -571,6 +602,14 @@ if(PACK.accent){
     "@media (prefers-color-scheme: dark){:root:not([data-theme=\"light\"]){--accent:"+PACK.accent.dark+";--accent-soft:"+PACK.accent.darkSoft+";--accent-line:"+PACK.accent.darkLine+"}}"+
     ":root[data-theme=\"dark\"]{--accent:"+PACK.accent.dark+";--accent-soft:"+PACK.accent.darkSoft+";--accent-line:"+PACK.accent.darkLine+"}";
   document.head.appendChild(st);
+}
+
+if(PACK.hardnessLabels){
+  Object.keys(PACK.hardnessLabels).forEach(k => {
+    const v = PACK.hardnessLabels[k];
+    if(v && v.en) T.en["h_"+k] = v.en;
+    if(v && (v.he || v.en)) T.he["h_"+k] = v.he || v.en;
+  });
 }
 
 const AREA_LABEL = { en:{}, he:{} };
@@ -639,8 +678,8 @@ function pool(opts){
     if(f.areas.length && !f.areas.includes(q.area)) return false;
     if(f.diffs.length && !f.diffs.includes(q.difficulty)) return false;
     if(f.hard.length && !f.hard.includes(q.hardnessSource)) return false;
-    if(opts.mcqOnly){ if(q.type!=="mcq") return false; }
-    else if(f.types.length && !f.types.includes(q.type)) return false;
+    if(opts.autoOnly && q.type==="open") return false;   // only `open` needs a human
+    if(f.types.length && !f.types.includes(q.type)) return false;
     return true;
   });
 }
@@ -680,9 +719,67 @@ function optView(q, order){
     why: oi === q.answer ? null : (b.whyWrong ? b.whyWrong[oi > q.answer ? oi-1 : oi] : null)
   }));
 }
+/* Cloze: forgiving comparison — case, surrounding space, curly quotes and a
+   trailing full stop never decide whether a grammar answer is right. */
+function normAns(x){
+  return String(x == null ? "" : x).toLowerCase()
+    .replace(/[\u2018\u2019\u02BC]/g, "'").replace(/[\u201C\u201D]/g, '"')
+    .replace(/\s+/g, " ").replace(/[.,!?;:]+$/, "").trim();
+}
+function blankOk(q, i, typed){
+  const list = (q.answers && q.answers[i]) || [];
+  const t = normAns(typed);
+  return !!t && list.some(x => normAns(x) === t);
+}
+function clozeDone(q, a){
+  const n = (q.answers || []).length;
+  for(let i = 0; i < n; i++){ if(!((a.typed || [])[i] || "").trim()) return false; }
+  return n > 0;
+}
+function clozeCorrect(q, a){
+  const n = (q.answers || []).length;
+  for(let i = 0; i < n; i++){ if(!blankOk(q, i, (a.typed || [])[i])) return false; }
+  return n > 0;
+}
+/* Renders the sentence with its blanks as inputs, or as the filled-in answer once checked. */
+function clozeHtml(q, a, locked){
+  const parts = String(q.sentence || "").split("___");
+  let out = "";
+  for(let i = 0; i < parts.length; i++){
+    out += esc(parts[i]);     // the sentence under test stays pristine: no term marks in it
+    if(i < parts.length - 1){
+      const v = esc(((a.typed || [])[i]) || "");
+      const cls = locked ? (blankOk(q, i, (a.typed || [])[i]) ? " good" : " bad") : "";
+      const wide = Math.max(6, Math.min(16, (((q.answers[i] || [])[0]) || "").length + 3));
+      out += '<input class="blank' + cls + '" data-blank="' + i + '" type="text" size="' + wide + '" value="' + v +
+             '" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"' +
+             (locked ? " disabled" : ' placeholder="' + esc(t.typeHere) + '"') + '>';
+    }
+  }
+  return out;
+}
+function clozeModel(q){
+  const parts = String(q.sentence || "").split("___");
+  let out = "";
+  for(let i = 0; i < parts.length; i++){
+    out += esc(parts[i]);
+    if(i < parts.length - 1) out += "<u>" + esc(((q.answers[i] || [])[0]) || "") + "</u>";
+  }
+  return out;
+}
+
 function isCorrect(q, a){
-  if(!a || a.picked==null || !a.presented) return false;
+  if(!a) return false;
+  if(q.type === "cloze") return clozeCorrect(q, a);
+  if(a.picked == null || !a.presented) return false;
   return a.presented[a.picked] === q.answer;
+}
+/* "answered" means something gradable was supplied, whatever the type. */
+function answered(q, a){
+  if(!a) return false;
+  if(q.type === "cloze") return clozeDone(q, a);
+  if(q.type === "open")  return !!(a.text || "").trim();
+  return a.picked !== null;
 }
 
 /* ============================ scoring / stats ============================ */
@@ -709,7 +806,7 @@ function renderHome(){
   const counts={}; for(const q of QUESTIONS) counts[q.area]=(counts[q.area]||0)+1;
   const dCount={1:0,2:0,3:0,4:0}; for(const q of QUESTIONS) dCount[q.difficulty]++;
   const hCount={}; for(const q of QUESTIONS) hCount[q.hardnessSource]=(hCount[q.hardnessSource]||0)+1;
-  const tCount={mcq:0,open:0}; for(const q of QUESTIONS) tCount[q.type]++;
+  const tCount={mcq:0,cloze:0,open:0}; for(const q of QUESTIONS) tCount[q.type]=(tCount[q.type]||0)+1;
   const f=S.filters;
 
   const areaChips = AREAS.map(a =>
@@ -721,7 +818,8 @@ function renderHome(){
   const hardChips = ["concept","distractors","computation","recall","trap"].map(h =>
     '<button class="chip" data-f="hard" data-v="'+h+'" aria-pressed="'+(f.hard.includes(h))+'">'+
     esc(t["h_"+h])+' <span class="n">'+(hCount[h]||0)+'</span></button>').join("");
-  const typeChips = ["mcq","open"].map(ty =>
+  const TYPES = ["mcq","cloze","open"].filter(ty => tCount[ty]);
+  const typeChips = TYPES.map(ty =>
     '<button class="chip" data-f="types" data-v="'+ty+'" aria-pressed="'+(f.types.includes(ty))+'">'+
     esc(t[ty])+' <span class="n">'+tCount[ty]+'</span></button>').join("");
 
@@ -794,11 +892,11 @@ function wireNav(){
 
 /* ============================ RUN (practice + quiz) ============================ */
 function startRun(mode, list){
-  const mcqOnly = (mode==="quiz" && !S.settings.includeOpenInQuiz);
+  const autoOnly = (mode==="quiz" && !S.settings.includeOpenInQuiz);
   let items;
   if(list && list.length){ items = list.slice(); }
   else {
-    const p = pool({mcqOnly});
+    const p = pool({autoOnly});
     if(!p.length){ view().innerHTML='<div class="empty">'+esc(t.emptyPool)+'</div>';
       setActions('<button class="btn primary" data-nav="home">'+esc(t.home)+'</button>'); wireNav(); return; }
     items = mode==="quiz" ? pick(p, Math.min(S.quizLen, p.length), true) : pick(p, p.length, true);
@@ -807,7 +905,7 @@ function startRun(mode, list){
   renderRun();
 }
 function curQ(){ return session.items[session.i]; }
-function ansFor(q){ return session.answers[q.id] || (session.answers[q.id]={ picked:null, text:"", hinted:false, revealed:false, explained:false, self:null, presented:null }); }
+function ansFor(q){ return session.answers[q.id] || (session.answers[q.id]={ picked:null, text:"", typed:[], hinted:false, revealed:false, explained:false, self:null, presented:null }); }
 
 function renderRun(){
   annReset(curQ().area);
@@ -818,7 +916,7 @@ function renderRun(){
 
   let head;
   if(quiz){
-    const dots = session.items.map((it,i)=>'<i class="'+(i===session.i?"now":(session.answers[it.id]&&(session.answers[it.id].picked!==null||session.answers[it.id].text)?"done":""))+'"></i>').join("");
+    const dots = session.items.map((it,i)=>'<i class="'+(i===session.i?"now":(answered(it, session.answers[it.id])?"done":""))+'"></i>').join("");
     head = '<div class="progress"><span class="cnt">'+(session.i+1)+' '+esc(t.quizOf)+' '+session.items.length+'</span><div class="qdots">'+dots+'</div></div>';
   } else {
     head = '<div class="progress"><div class="bar"><i style="width:'+Math.round((session.i)/session.items.length*100)+'%"></i></div><span class="cnt tnum">'+(session.i+1)+'/'+session.items.length+'</span></div>';
@@ -852,6 +950,22 @@ function renderRun(){
       body += '<div class="verdict '+(ok?"ok":"no")+'"><span class="g">'+(ok?"✓":"✗")+'</span>'+esc(ok?t.correct:t.incorrect)+(a.hinted?' · <span class="mono" style="font-size:12px">'+esc(t.hinted)+'</span>':'')+'</div>';
       if(a.explained) body += '<div class="explain"><p class="eyebrow">'+esc(t.explanation)+'</p><p>'+ann(b.explanation,8)+'</p></div>';
     }
+  } else if(q.type==="cloze"){
+    const locked = a.picked!==null && !quiz;
+    body += '<p class="sent" style="margin-top:4px">'+clozeHtml(q,a,locked)+'</p>';
+    if(locked){
+      const ok = clozeCorrect(q,a);
+      body += '<div class="verdict '+(ok?"ok":"no")+'"><span class="g">'+(ok?"\u2713":"\u2717")+'</span>'+
+        esc(ok?t.correct:t.incorrect)+(a.hinted?' \u00b7 <span class="mono" style="font-size:12px">'+esc(t.hinted)+'</span>':'')+'</div>';
+      if(!ok){
+        body += '<div class="fix"><b>'+esc(t.modelForm)+'</b><span class="full">'+clozeModel(q)+'</span></div>';
+        const alts=[];
+        (q.answers||[]).forEach(list => (list||[]).slice(1).forEach(x => alts.push(x)));
+        if(alts.length) body += '<p class="alt">'+esc(t.alsoAccepted)+': '+
+          alts.map(x=>'<code>'+esc(x)+'</code>').join(" ")+'</p>';
+      }
+      if(a.explained) body += '<div class="explain"><p class="eyebrow">'+esc(t.explanation)+'</p><p>'+ann(b.explanation,8)+'</p></div>';
+    }
   } else {
     body += '<div style="margin-top:14px">'+
       (a.revealed?'':'<p class="eyebrow">'+esc(t.writeAnswer)+'</p>')+
@@ -883,6 +997,16 @@ function renderRun(){
       if(!quiz && !a.explained) acts.push('<button class="btn" data-act="explain">'+esc(t.explain)+'</button>');
       acts.push('<button class="btn primary" data-act="next">'+esc(session.i===session.items.length-1&&quiz?t.finish:t.next)+'</button>');
     }
+  } else if(q.type==="cloze"){
+    if(a.picked===null || quiz){
+      if(!a.hinted) acts.push('<button class="btn" data-act="hint">'+esc(t.hint)+'</button>');
+      acts.push(quiz
+        ? '<button class="btn primary" data-act="next">'+esc(session.i===session.items.length-1?t.finish:t.next)+'</button>'
+        : '<button class="btn primary" data-act="check">'+esc(t.check)+'</button>');
+    } else {
+      if(!a.explained) acts.push('<button class="btn" data-act="explain">'+esc(t.explain)+'</button>');
+      acts.push('<button class="btn primary" data-act="next">'+esc(t.next)+'</button>');
+    }
   } else {
     if(!a.revealed){
       if(!a.hinted) acts.push('<button class="btn" data-act="hint">'+esc(t.hint)+'</button>');
@@ -912,6 +1036,24 @@ function wireRun(){
     renderRun();
    });
   });
+  view().querySelectorAll("[data-blank]").forEach(inp => {
+    inp.addEventListener("input", () => {
+      a.typed = a.typed || [];
+      a.typed[+inp.dataset.blank] = inp.value;
+    });
+    inp.addEventListener("keydown", ev => {
+      if(ev.key !== "Enter") return;
+      ev.preventDefault();
+      const all = Array.from(view().querySelectorAll("[data-blank]"));
+      const nxt = all[all.indexOf(inp) + 1];
+      if(nxt){ nxt.focus(); return; }
+      const go = document.querySelector('[data-act="check"],[data-act="next"]');
+      if(go) go.click();
+    });
+  });
+  const firstBlank = view().querySelector("[data-blank]:not([disabled])");
+  if(firstBlank && !/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) firstBlank.focus();
+
   const ta=document.getElementById("openAns");
   if(ta) ta.addEventListener("input", ()=>{ a.text=ta.value; });
   view().querySelectorAll("[data-rb]").forEach(cb => cb.addEventListener("change", ()=>{
@@ -927,7 +1069,17 @@ function wireRun(){
   }));
   document.querySelectorAll("[data-act]").forEach(btn => btn.addEventListener("click", ()=>{
     const act=btn.dataset.act;
-    if(act==="hint"){ a.hinted=true; renderRun(); }
+    if(act==="check"){
+      if(!clozeDone(q,a)){
+        const miss=view().querySelector("[data-blank]");
+        if(miss){ miss.focus(); miss.placeholder=t.blankEmpty; }
+        return;
+      }
+      a.picked=0;                       // marks the item as answered
+      record(q, clozeCorrect(q,a), a.hinted); recent.push(q.id);
+      renderRun();
+    }
+    else if(act==="hint"){ a.hinted=true; renderRun(); }
     else if(act==="reveal"){ a.revealed=true; renderRun(); }
     else if(act==="revealOpen"){ const el2=document.getElementById("openAns"); if(el2) a.text=el2.value; a.revealed=true; renderRun(); }
     else if(act==="explain"){ a.explained=true; renderRun(); }
@@ -952,7 +1104,7 @@ function finishQuiz(){
   for(const q of session.items){
     const a=session.answers[q.id]; if(!a) continue;
     recent.push(q.id);
-    if(q.type==="mcq" && a.picked!==null) record(q, isCorrect(q,a), a.hinted);
+    if((q.type==="mcq" || q.type==="cloze") && answered(q,a)) record(q, isCorrect(q,a), a.hinted);
   }
   renderResults();
 }
@@ -961,7 +1113,7 @@ function quizScore(){
   for(const q of session.items){
     const a=session.answers[q.id]||{};
     total++;
-    if(q.type==="mcq"){ if(isCorrect(q,a)) got++; }
+    if(q.type==="mcq" || q.type==="cloze"){ if(isCorrect(q,a)) got++; }
     else { if(a.self==null) pending++; else got+=a.self; }
   }
   return {got, total, pending, pct: total? Math.round(got/total*100):0};
@@ -975,7 +1127,7 @@ function renderResults(){
 
   const byD={}; for(const q of session.items){ const a=session.answers[q.id]||{};
     const d=q.difficulty; byD[d]=byD[d]||{n:0,ok:0}; byD[d].n++;
-    if(q.type==="mcq"? isCorrect(q,a) : a.self>=0.5) byD[d].ok++; }
+    if(q.type==="open"? a.self>=0.5 : isCorrect(q,a)) byD[d].ok++; }
   html += '<div class="section" style="margin-top:22px"><p class="eyebrow">'+esc(t.byDifficulty)+'</p><div class="barlist">'+
     Object.keys(byD).sort().map(d=>{ const o=byD[d]; const p=Math.round(o.ok/o.n*100);
       return '<div class="barrow"><span>'+meter(d)+' '+esc(t["d"+d])+'</span><div class="track"><i style="width:'+p+'%;background:var(--d'+d+')"></i></div><span class="pct">'+o.ok+'/'+o.n+'</span></div>';
@@ -985,7 +1137,7 @@ function renderResults(){
   view().innerHTML = html;
   wireReview();
   const wrong = session.items.filter(q=>{ const a=session.answers[q.id]||{};
-    return q.type==="mcq" ? !isCorrect(q,a) : !(a.self>=0.5); });
+    return q.type==="open" ? !(a.self>=0.5) : !isCorrect(q,a); });
   setActions('<button class="btn" data-nav="home">'+esc(t.home)+'</button>'+
     (wrong.length?'<button class="btn wide" id="retryWrong">'+esc(t.retryWrong)+' ('+wrong.length+')</button>':'')+
     '<button class="btn primary" id="againBtn">'+esc(t.again)+'</button>');
@@ -998,7 +1150,14 @@ function reviewItem(q,i){
   const a=session.answers[q.id]||{}, b=L(q);
   let inner = '<div class="qmeta">'+meter(q.difficulty)+'<span>'+esc(t.q)+' '+(i+1)+'</span><span class="dot"></span><span class="area">'+esc(AREA_LABEL[S.lang][q.area])+'</span></div>'+
     '<p class="q">'+ann(b.q,5)+'</p>';
-  if(q.type==="mcq"){
+  if(q.type==="cloze"){
+    const ok = isCorrect(q,a);
+    inner += '<p class="sent" style="font-size:15.5px;margin:0 0 10px">'+clozeHtml(q,a,true)+'</p>';
+    if(!ok) inner += '<div class="ansline ok"><span class="lab">'+esc(t.modelForm)+'</span>'+
+      '<span class="txt" style="direction:ltr;unicode-bidi:isolate">'+clozeModel(q)+'</span></div>';
+    inner += '<details style="margin-top:10px"><summary class="eyebrow" style="cursor:pointer">'+esc(t.explanation)+'</summary>'+
+      '<p style="font-size:14px;color:var(--muted);line-height:1.6;margin:8px 0 0">'+ann(b.explanation,8)+'</p></details>';
+  } else if(q.type==="mcq"){
     const ok = isCorrect(q,a);
     const ov = optView(q, a.presented);
     const correctTxt = ov.find(o=>o.correct).text;
@@ -1260,7 +1419,6 @@ window.addEventListener("resize", hideTip);
 applyChrome();
 renderHome();
 </script>
-
 
 <script>
 if ("serviceWorker" in navigator) {
